@@ -1,0 +1,115 @@
+/* =========================
+   STICKS ANIMATION (3 PNG layers)
+   ========================= */
+
+.sv-sticks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 18px 0 10px;
+  user-select: none;
+
+  /* idle subtle floating */
+  animation: svSticksFloat 1.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.sv-sticks-wrap {
+  position: relative;
+  width: 180px;          /* chỉnh size ở đây */
+  aspect-ratio: 1 / 1;   /* giữ vuông cho dễ scale */
+  transform-origin: 50% 70%;
+
+  /* idle wobble */
+  animation: svSticksWobble 1.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.sv-sticks-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* layers */
+.sv-sticks-sau {
+  z-index: 1;
+}
+
+.sv-sticks-que {
+  z-index: 2;
+  transform-origin: 50% 85%;
+  animation: svQueIdle 1.35s ease-in-out infinite;
+  will-change: transform, filter;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.18));
+}
+
+.sv-sticks-truoc {
+  z-index: 3;
+}
+
+/* when shaking: stop idle motions and run punchy anims */
+.sv-sticks.is-shaking {
+  animation: none;
+}
+
+.sv-sticks.is-shaking .sv-sticks-wrap {
+  animation: svSticksShake 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sv-sticks.is-shaking .sv-sticks-que {
+  animation: svQuePop 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* =========================
+   keyframes
+   ========================= */
+
+@keyframes svSticksFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes svSticksWobble {
+  0% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+  100% { transform: rotate(-1.5deg); }
+}
+
+@keyframes svQueIdle {
+  0% { transform: translateY(6px) rotate(-2deg) scale(0.99); }
+  50% { transform: translateY(0px) rotate(2deg) scale(1); }
+  100% { transform: translateY(6px) rotate(-2deg) scale(0.99); }
+}
+
+@keyframes svSticksShake {
+  0% { transform: translateX(0) rotate(0) scale(1); }
+  10% { transform: translateX(-8px) rotate(-9deg) scale(1.02); }
+  20% { transform: translateX(8px) rotate(9deg) scale(1.03); }
+  30% { transform: translateX(-10px) rotate(-11deg) scale(1.03); }
+  40% { transform: translateX(10px) rotate(11deg) scale(1.03); }
+  55% { transform: translateX(-6px) rotate(-7deg) scale(1.02); }
+  70% { transform: translateX(6px) rotate(7deg) scale(1.01); }
+  100% { transform: translateX(0) rotate(0) scale(1); }
+}
+
+@keyframes svQuePop {
+  0% { transform: translateY(8px) rotate(0) scale(1); }
+  20% { transform: translateY(-6px) rotate(-8deg) scale(1.02); }
+  40% { transform: translateY(-10px) rotate(8deg) scale(1.03); }
+  60% { transform: translateY(-4px) rotate(-5deg) scale(1.02); }
+  100% { transform: translateY(6px) rotate(0) scale(1); }
+}
+
+/* accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sv-sticks,
+  .sv-sticks-wrap,
+  .sv-sticks-que {
+    animation: none !important;
+  }
+}
