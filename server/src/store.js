@@ -1,27 +1,20 @@
 import { nanoid } from "nanoid";
-import type { Player, Prize, Room, RoomMode, WinnerItem } from "./types.js";
 import { formatVND, genRoomCode6, now, upper } from "./utils.js";
 
+const rooms = new Map();
 
-const rooms = new Map<string, Room>();
-
-export function createRoom(payload: {
-  hostName: string;
-  mode: RoomMode;
-  shakesPerPlayer: number;
-  prizes: Prize[];
-}): Room {
+export function createRoom(payload) {
   let code = genRoomCode6();
   while (rooms.has(code)) code = genRoomCode6();
 
-  const room: Room = {
+  const room = {
     code,
     hostName: payload.hostName || "Chủ Xị",
-    mode: payload.mode,
-    shakesPerPlayer: Math.max(1, Math.min(50, payload.shakesPerPlayer || 1)),
+    mode: payload.mode || "online",
+    shakesPerPlayer: Math.max(1, Math.min(50, Number(payload.shakesPerPlayer || 1))),
     started: false,
     ended: false,
-    prizes: payload.prizes ?? [],
+    prizes: Array.isArray(payload.prizes) ? payload.prizes : [],
     players: new Map(),
     winners: [],
     clients: new Map()
@@ -31,11 +24,11 @@ export function createRoom(payload: {
   return room;
 }
 
-export function getRoom(code: string): Room | null {
+export function getRoom(code) {
   return rooms.get(upper(code)) ?? null;
 }
 
-export function roomStatus(room: Room) {
+export function roomStatus(room) {
   const totalPlayers = room.players.size;
   const totalPrizes = room.prizes.reduce((s, p) => s + Math.max(0, p.remaining), 0);
   const totalBudget = room.prizes.reduce((s, p) => {
@@ -63,98 +56,97 @@ export function roomStatus(room: Room) {
   };
 }
 
-export function joinRoom(room: Room, name: string): Player {
+export function joinRoom(room, name) {
   const nm = (name ?? "").toString().trim();
   if (!nm) throw new Error("NAME_REQUIRED");
 
-  const p: Player = {
+  const p = {
     id: nanoid(10),
     name: nm,
     joinedAt: now(),
     shakesUsed: 0,
     receipts: []
   };
+
   room.players.set(p.id, p);
   return p;
 }
 
-export function startGame(room: Room) {
+export function startGame(room) {
   room.started = true;
   room.ended = false;
 }
 
-export function endGame(room: Room) {
+export function endGame(room) {
   room.ended = true;
   room.started = false;
 }
 
-export function addPrize(room: Room, prize: Prize) {
+export function addPrize(room, prize) {
   room.prizes.push(prize);
 }
 
-export function updatePrizeQty(room: Room, prizeId: string, qty: number) {
+export function updatePrizeQty(room, prizeId, qty) {
   const p = room.prizes.find(x => x.id === prizeId);
   if (!p) throw new Error("PRIZE_NOT_FOUND");
-  p.remaining = Math.max(0, Math.min(9999, qty));
+  p.remaining = Math.max(0, Math.min(9999, Number(qty)));
 }
 
-export function removePrize(room: Room, prizeId: string) {
+export function removePrize(room, prizeId) {
   const idx = room.prizes.findIndex(x => x.id === prizeId);
   if (idx >= 0) room.prizes.splice(idx, 1);
 }
 
-export function claim(room: Room, playerId: string, energy: number) {
+export function claim(room, playerId, energy) {
   const p = room.players.get(playerId);
   if (!p) throw new Error("PLAYER_NOT_FOUND");
   if (!room.started || room.ended) throw new Error("GAME_NOT_RUNNING");
 
-  if (!Number.isFinite(energy) || energy < 12) throw new Error("SHAKE_TOO_WEAK");
+  const e = Number(energy);
+  if (!Number.isFinite(e) || e < 12) throw new Error("SHAKE_TOO_WEAK");
 
   if (p.shakesUsed >= room.shakesPerPlayer) throw new Error("Tối đa 1 lần mỗi người");
 
   const pool = room.prizes.filter(x => x.remaining > 0);
   if (!pool.length) throw new Error("NO_PRIZE_LEFT");
 
-  const picked = pool[Math.floor(Math.random() * pool.length)]!;
+  const picked = pool[Math.floor(Math.random() * pool.length)];
   picked.remaining -= 1;
 
   p.shakesUsed += 1;
 
-  const prizeText =
-    picked.type === "cash"
-      ? picked.formatted
-      : picked.label;
-
+  const prizeText = picked.type === "cash" ? picked.formatted : picked.label;
   p.receipts.unshift({ at: now(), prizeText });
 
-  const win: WinnerItem = {
+  const win = {
     at: now(),
     playerId: p.id,
     playerName: p.name,
-    prizeText: picked.type === "cash" ? picked.label : picked.label
+    prizeText: picked.label
   };
   room.winners.unshift(win);
 
   return { prize: picked, prizeText, winner: win, player: p };
 }
 
-export function makeCashPrize(value: number, qty: number): Prize {
-  const k = Math.round(value / 1000);
+export function makeCashPrize(value, qty) {
+  const v = Number(value);
+  const k = Math.round(v / 1000);
   return {
     id: nanoid(),
     type: "cash",
     label: `Lì xì ${k}k`,
-    value,
-    formatted: formatVND(value),
-    remaining: Math.max(0, qty)
+    value: v,
+    formatted: formatVND(v),
+    remaining: Math.max(0, Number(qty))
   };
 }
 
-export function makeTrollPrize(label: string, qty: number): Prize {
+export function makeTrollPrize(label, qty) {
   return {
     id: nanoid(),
     type: "troll",
-    label,
-    remaining: Math.max(0, qty)
+    label: (label ?? "").toString(),
+    remaining: Math.max(0, Number(qty))
   };
 }

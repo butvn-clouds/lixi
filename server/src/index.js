@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { nanoid } from "nanoid";
+
 import {
   addPrize,
   claim,
@@ -16,36 +18,35 @@ import {
 } from "./store.js";
 
 import { formatVND, upper } from "./utils.js";
-import type { Prize } from "./types.js";
-import { nanoid } from "nanoid";
-
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-function sseWrite(res: express.Response, event: string, data: any) {
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+function sseWrite(res, event, data) {
   res.write(`event: ${event}\n`);
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 
-function broadcast(room: any, event: string, data: any) {
+function broadcast(room, event, data) {
   for (const res of room.clients.values()) {
     try { sseWrite(res, event, data); } catch {}
   }
 }
 
-function broadcastStatus(room: any) {
+function broadcastStatus(room) {
   broadcast(room, "room_status", roomStatus(room));
 }
 
 app.post("/api/rooms", (req, res) => {
   try {
     const hostName = (req.body?.hostName ?? "Chủ Xị").toString();
-    const mode = (req.body?.mode ?? "online") as "online" | "local";
+    const mode = (req.body?.mode ?? "online").toString();
     const shakesPerPlayer = Number(req.body?.shakesPerPlayer ?? 1);
 
-    const prizes: Prize[] = Array.isArray(req.body?.prizes) ? req.body.prizes : [
+    const prizes = Array.isArray(req.body?.prizes) ? req.body.prizes : [
       makeCashPrize(500000, 1),
       makeCashPrize(200000, 1),
       makeCashPrize(100000, 2),
@@ -54,7 +55,7 @@ app.post("/api/rooms", (req, res) => {
 
     const room = createRoom({ hostName, mode, shakesPerPlayer, prizes });
     res.json({ code: room.code, room: roomStatus(room) });
-  } catch (e: any) {
+  } catch (e) {
     res.status(400).send(e?.message ?? "CREATE_FAILED");
   }
 });
@@ -75,7 +76,7 @@ app.post("/api/rooms/:code/join", (req, res) => {
     broadcast(room, "player_joined", { id: player.id, name: player.name });
     broadcastStatus(room);
     res.json({ playerId: player.id, playerName: player.name, room: roomStatus(room) });
-  } catch (e: any) {
+  } catch (e) {
     res.status(400).send(e?.message ?? "JOIN_FAILED");
   }
 });
@@ -101,17 +102,20 @@ app.post("/api/rooms/:code/end", (req, res) => {
 app.post("/api/rooms/:code/prizes/cash", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
+
   const value = Number(req.body?.value ?? 0);
   const qty = Number(req.body?.qty ?? 1);
   if (!Number.isFinite(value) || value <= 0) return res.status(400).send("INVALID_VALUE");
-  const p: Prize = {
+
+  const p = {
     id: nanoid(),
     type: "cash",
-    label: (req.body?.label ?? `Lì xì ${Math.round(value/1000)}k`).toString(),
+    label: (req.body?.label ?? `Lì xì ${Math.round(value / 1000)}k`).toString(),
     value,
     formatted: formatVND(value),
     remaining: Math.max(0, qty)
   };
+
   addPrize(room, p);
   broadcast(room, "prize_pool_updated", room.prizes);
   broadcastStatus(room);
@@ -121,9 +125,11 @@ app.post("/api/rooms/:code/prizes/cash", (req, res) => {
 app.post("/api/rooms/:code/prizes/troll", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
+
   const label = (req.body?.label ?? "").toString().trim();
   const qty = Number(req.body?.qty ?? 1);
   if (!label) return res.status(400).send("INVALID_LABEL");
+
   addPrize(room, makeTrollPrize(label, qty));
   broadcast(room, "prize_pool_updated", room.prizes);
   broadcastStatus(room);
@@ -133,8 +139,10 @@ app.post("/api/rooms/:code/prizes/troll", (req, res) => {
 app.patch("/api/rooms/:code/prizes/:prizeId", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
+
   const qty = Number(req.body?.qty);
   if (!Number.isFinite(qty)) return res.status(400).send("INVALID_QTY");
+
   updatePrizeQty(room, req.params.prizeId, qty);
   broadcast(room, "prize_pool_updated", room.prizes);
   broadcastStatus(room);
@@ -144,6 +152,7 @@ app.patch("/api/rooms/:code/prizes/:prizeId", (req, res) => {
 app.delete("/api/rooms/:code/prizes/:prizeId", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
+
   removePrize(room, req.params.prizeId);
   broadcast(room, "prize_pool_updated", room.prizes);
   broadcastStatus(room);
@@ -157,6 +166,7 @@ app.post("/api/rooms/:code/shake", (req, res) => {
   try {
     const playerId = (req.body?.playerId ?? "").toString();
     const energy = Number(req.body?.energy ?? 0);
+
     const r = claim(room, playerId, energy);
 
     broadcast(room, "prize_won", {
@@ -170,7 +180,7 @@ app.post("/api/rooms/:code/shake", (req, res) => {
     broadcastStatus(room);
 
     res.json({ prize: r.prize, prizeText: r.prizeText, receipts: r.player.receipts });
-  } catch (e: any) {
+  } catch (e) {
     res.status(400).send(e?.message ?? "SHAKE_FAILED");
   }
 });
@@ -200,5 +210,5 @@ app.get("/stream/:code", (req, res) => {
   });
 });
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
-app.listen(PORT, () => console.log(`✅ Server: http://localhost:${PORT}`));
+const PORT = Number(process.env.PORT || 5000);
+app.listen(PORT, "0.0.0.0", () => console.log(`✅ Server: http://localhost:${PORT}`));
