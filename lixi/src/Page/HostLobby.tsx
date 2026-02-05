@@ -23,7 +23,7 @@ export default function HostLobby() {
     return () => sse.disconnect();
   }, [code]);
 
-  const joinUrl = useMemo(() => `${window.location.origin}/join/${code}`, [code]);
+  const joinUrl = useMemo(() => `${window.location.origin}/#/join/${code}`, [code]);
 
   const start = async () => {
     try { await api.start(code); } catch (e: any) { toastErr(e?.message ?? "Start fail"); }
