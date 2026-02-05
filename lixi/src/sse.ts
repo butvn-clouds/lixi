@@ -1,4 +1,4 @@
-import { SSE_BASE } from "../constants";
+import { SSE_BASE } from "./constants";
 import type { RoomStatus } from "./api";
 
 export class SSEClient {

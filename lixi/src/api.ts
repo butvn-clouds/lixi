@@ -1,4 +1,4 @@
-import { API_BASE } from "../constants";
+import { API_BASE } from "./constants";
 
 export type RoomMode = "online" | "local";
 

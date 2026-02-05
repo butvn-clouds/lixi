@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src"]
+"include": ["src", "constants.ts", "vite-env.d.ts"]
 }
