@@ -24,7 +24,7 @@ export default function Join() {
   return (
     <div className="sv-screen">
       <div className="sv-hero">
-        <div className="sv-logo">SUM VẦY</div>
+        <div className="sv-logo">Thử vận may</div>
         <div className="sv-hero-pill">✦ PHÒNG: {code} ✦</div>
       </div>
 
@@ -32,12 +32,14 @@ export default function Join() {
         <div className="sv-join-icon">♞</div>
         <div className="sv-join-title">Bạn tên gì?</div>
         <Input
-          placeholder="VD: Châu Địch Tôn"
+          placeholder="VD: Tôn Thất Đạt"
+          style={{ marginBottom: '10px' }}
+
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && join()}
         />
-        <Button variant="gold" onClick={join} disabled={!name.trim()}>
+        <Button className="sv-btn-full" variant="gold" onClick={() => join()} disabled={!name.trim()}>
           👤 VÀO CHƠI!
         </Button>
 

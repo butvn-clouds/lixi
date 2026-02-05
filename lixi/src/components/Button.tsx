@@ -12,7 +12,7 @@ export default function Button(
         variant === "red" ? "sv-btn-red" : "",
         variant === "gold" ? "sv-btn-gold" : "",
         variant === "ghost" ? "sv-btn-ghost" : "",
-        full ? "sv-btn-full" : "",
+        full ? "" : "",
         className ?? ""
       ].join(" ")}
     />

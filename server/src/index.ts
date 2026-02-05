@@ -24,7 +24,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// SSE
 function sseWrite(res: express.Response, event: string, data: any) {
   res.write(`event: ${event}\n`);
   res.write(`data: ${JSON.stringify(data)}\n\n`);
@@ -40,14 +39,12 @@ function broadcastStatus(room: any) {
   broadcast(room, "room_status", roomStatus(room));
 }
 
-// API
 app.post("/api/rooms", (req, res) => {
   try {
     const hostName = (req.body?.hostName ?? "Chủ Xị").toString();
     const mode = (req.body?.mode ?? "online") as "online" | "local";
     const shakesPerPlayer = Number(req.body?.shakesPerPlayer ?? 1);
 
-    // accept prizes or use defaults
     const prizes: Prize[] = Array.isArray(req.body?.prizes) ? req.body.prizes : [
       makeCashPrize(500000, 1),
       makeCashPrize(200000, 1),
@@ -101,7 +98,6 @@ app.post("/api/rooms/:code/end", (req, res) => {
   res.json({ ok: true });
 });
 
-// prizes management (host)
 app.post("/api/rooms/:code/prizes/cash", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
@@ -154,7 +150,6 @@ app.delete("/api/rooms/:code/prizes/:prizeId", (req, res) => {
   res.json(roomStatus(room));
 });
 
-// claim / shake
 app.post("/api/rooms/:code/shake", (req, res) => {
   const room = getRoom(req.params.code);
   if (!room) return res.status(404).send("ROOM_NOT_FOUND");
@@ -180,7 +175,6 @@ app.post("/api/rooms/:code/shake", (req, res) => {
   }
 });
 
-// SSE stream
 app.get("/stream/:code", (req, res) => {
   const code = upper(req.params.code);
   const room = getRoom(code);

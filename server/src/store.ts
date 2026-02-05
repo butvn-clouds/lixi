@@ -67,7 +67,6 @@ export function joinRoom(room: Room, name: string): Player {
   const nm = (name ?? "").toString().trim();
   if (!nm) throw new Error("NAME_REQUIRED");
 
-  // allow same name, different id
   const p: Player = {
     id: nanoid(10),
     name: nm,
@@ -111,12 +110,11 @@ export function claim(room: Room, playerId: string, energy: number) {
 
   if (!Number.isFinite(energy) || energy < 12) throw new Error("SHAKE_TOO_WEAK");
 
-  if (p.shakesUsed >= room.shakesPerPlayer) throw new Error("OUT_OF_SHAKES");
+  if (p.shakesUsed >= room.shakesPerPlayer) throw new Error("Tối đa 1 lần mỗi người");
 
   const pool = room.prizes.filter(x => x.remaining > 0);
   if (!pool.length) throw new Error("NO_PRIZE_LEFT");
 
-  // random simple
   const picked = pool[Math.floor(Math.random() * pool.length)]!;
   picked.remaining -= 1;
 
@@ -140,7 +138,6 @@ export function claim(room: Room, playerId: string, energy: number) {
   return { prize: picked, prizeText, winner: win, player: p };
 }
 
-// helpers to create preset cash prizes like screenshot chips
 export function makeCashPrize(value: number, qty: number): Prize {
   const k = Math.round(value / 1000);
   return {

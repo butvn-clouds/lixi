@@ -87,14 +87,14 @@ export default function HostLobby() {
             ) : (
               <>
                 {!st.started ? (
-                  <Button variant="red" onClick={start}>▶ BẮT ĐẦU NGAY</Button>
+                  <Button className="sv-btn-full" variant="red" onClick={start}>▶ BẮT ĐẦU NGAY</Button>
                 ) : (
-                  <Button variant="red" onClick={end}>■ KẾT THÚC</Button>
+                  <Button className="sv-btn-full" variant="red" onClick={end}>■ KẾT THÚC</Button>
                 )}
 
                 <div className="sv-row-2">
-                  <Button variant="ghost" onClick={() => nav(`/play/${code}`)}>👤 Chủ xị chơi</Button>
-                  <Button variant="ghost" onClick={() => navigator.clipboard.writeText(joinUrl)}>📣 Mời bạn bè</Button>
+                  <Button className="sv-btn-full" variant="ghost" onClick={() => nav(`/play/${code}`)}>👤 Chủ xị chơi</Button>
+                  <Button className="sv-btn-full" variant="ghost" onClick={() => navigator.clipboard.writeText(joinUrl)}>📣 Mời bạn bè</Button>
                 </div>
               </>
             )}

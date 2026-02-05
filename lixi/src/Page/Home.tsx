@@ -17,6 +17,7 @@ export default function Home() {
 
       <Card className="sv-home-card">
         <Button
+          className="sv-btn-full"
           variant="red"
           onClick={() => nav("/host/create")}
         >

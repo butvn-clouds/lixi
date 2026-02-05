@@ -40,7 +40,7 @@ export function showTroll(text: string) {
 export function toastErr(msg: string) {
   Swal.fire({
     icon: "error",
-    title: "Oops...",
+    title: "",
     text: msg,
     background: "linear-gradient(135deg,#1E3A5F,#0F172A)",
     color: "#fff",
